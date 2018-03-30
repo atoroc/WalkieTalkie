@@ -11,6 +11,9 @@ import android.media.MediaRecorder;
 import android.util.Log;
 import android.widget.Button;
 
+import com.montefiore.gaulthiergain.adhoclibrary.appframework.TransferManager;
+import com.montefiore.gaulthiergain.adhoclibrary.network.datalinkmanager.AdHocDevice;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -18,21 +21,24 @@ import java.io.OutputStream;
 
 public class MainConversation extends Activity {
 
-    private Button audioBtn;
-    private Context context;
-    private BluetoothSocket bSocket = null;
+    private TransferManager transferManager = null;
     private Thread recordingThread = null;
     private Thread playThread = null;
     private AudioRecord recorder = null;
     private AudioTrack track = null;
     private AudioManager am = null;
-    private InputStream inStream;
-    private OutputStream outStream;
+
     private byte buffer[] = null;
     private byte playBuffer[] = null;
+    private byte[] data;
     int minSize = AudioTrack.getMinBufferSize(16000, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT);
     private int bufferSize = minSize;
     private boolean isRecording = false;
+    private String remoteAddrDevice;
+
+    public MainConversation(TransferManager transferManager) {
+        this.transferManager = transferManager;
+    }
 
     // Based on previous project and
     // http://stackoverflow.com/questions/8499042/android-audiorecord-example
@@ -60,7 +66,8 @@ public class MainConversation extends Activity {
         while (isRecording) {
             try {
                 recorder.read(buffer, 0, bufferSize);
-                outStream.write(buffer);
+                //outStream.write(buffer);
+                transferManager.sendMessageTo(buffer, remoteAddrDevice);
             } catch (IOException e) {
                 Log.d("AUDIO", "Error when sending recording");
             }
@@ -70,7 +77,7 @@ public class MainConversation extends Activity {
 
     // Set input & output streams
     public void setupStreams() {
-        try {
+        /*try {
             inStream = bSocket.getInputStream();
         } catch (IOException e) {
             Log.e("SOCKET", "Error when creating input stream", e);
@@ -79,7 +86,7 @@ public class MainConversation extends Activity {
             outStream = bSocket.getOutputStream();
         } catch (IOException e) {
             Log.e("SOCKET", "Error when creating output stream", e);
-        }
+        }*/
     }
 
     // Stop Recording and free up resources
@@ -105,9 +112,6 @@ public class MainConversation extends Activity {
     public void startPlaying() {
         Log.d("AUDIO", "Assigning player");
         // Receive Buffer
-        playBuffer = new byte[minSize];
-
-        track.play();
         // Receive and play audio
         playThread = new Thread(new Runnable() {
             @Override
@@ -116,21 +120,32 @@ public class MainConversation extends Activity {
             }
         }, "AudioTrack Thread");
         playThread.start();
+
     }
+
 
     // Receive audio and write into audio track object for playback
     public void receiveRecording() {
+
+        playBuffer = new byte[minSize];
+
+        track.play();
+
         int i = 0;
         while (!isRecording) {
-            try {
-                if (inStream.available() == 0) {
-                    //Do nothing
-                } else {
-                    inStream.read(playBuffer);
-                    track.write(playBuffer, 0, playBuffer.length);
-                }
-            } catch (IOException e) {
-                Log.d("AUDIO", "Error when receiving recording");
+            /*if (inStream.available() == 0) {
+                //Do nothing
+            } else {
+                //inStream.read(playBuffer);
+                track.write(playBuffer, 0, playBuffer.length);
+            }*/
+            if (data == null || data.length == 0) {
+                //Do nothing
+            } else {
+                //inStream.read(playBuffer);
+                playBuffer = data;
+                track.write(playBuffer, 0, playBuffer.length);
+                data = null;
             }
         }
     }
@@ -149,9 +164,11 @@ public class MainConversation extends Activity {
         recorder.release();
     }
 
-    // Setter for socket object
-    public void setSocket(BluetoothSocket bSocket) {
-        this.bSocket = bSocket;
+    public void setRemoteAddrDevice(String remoteAddrDevice) {
+        this.remoteAddrDevice = remoteAddrDevice;
     }
 
+    public void setData(byte[] data) {
+        this.data = data;
+    }
 }
