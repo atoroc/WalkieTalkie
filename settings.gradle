@@ -1,0 +1,4 @@
+include ':app'
+include ':adhoclibrary'
+
+project (':adhoclibrary').projectDir = new File('/Users/gaulthiergain/Desktop/AdHocLib/adhoclibrary')
