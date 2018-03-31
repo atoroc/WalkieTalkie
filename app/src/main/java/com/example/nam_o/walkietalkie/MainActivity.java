@@ -33,9 +33,10 @@ public class MainActivity extends Activity {
     private boolean permissionToRecordAccepted = false;
 
     // Define UI elements
-    private Button audio;
-    private Button connect;
-    private Button disconnect;
+    private Button btnAudio;
+    private Button btnConnect;
+    private Button btnEnable;
+    private Button btnDisconnect;
     private ListView listView;
 
     private ArrayList<AdHocDevice> deviceList;
@@ -80,20 +81,20 @@ public class MainActivity extends Activity {
             @Override
             public void onConnection(String remoteAddress, String remoteName) {
 
-                // Start listening for audio from other device
+                // Start listening for btnAudio from other device
                 audioClient.audioCreate();
 
                 audioClient.setupStreams();
                 audioClient.startPlaying();
-                audio.setVisibility(View.VISIBLE);
+                btnAudio.setVisibility(View.VISIBLE);
                 remoteAddr = remoteAddress;
                 audioClient.setRemoteAddrDevice(remoteAddress);
 
                 // Change status of UI elements
                 Toast.makeText(MainActivity.this, "Connection was successful with " + remoteAddress, Toast.LENGTH_LONG).show();
                 listView.setVisibility(ListView.GONE);
-                audio.setVisibility(View.VISIBLE);
-                connect.setEnabled(false);
+                btnAudio.setVisibility(View.VISIBLE);
+                btnConnect.setEnabled(false);
                 connectAttempt = true;
             }
 
@@ -124,17 +125,18 @@ public class MainActivity extends Activity {
 
         // Identify UI elements
         listView = findViewById(R.id.listViewItems);
-        connect = findViewById(R.id.connect);
-        disconnect = findViewById(R.id.disconnect);
-        audio = findViewById(R.id.audioBtn);
+        btnConnect = findViewById(R.id.connect);
+        btnEnable = findViewById(R.id.enable);
+        btnDisconnect = findViewById(R.id.disconnect);
+        btnAudio = findViewById(R.id.audioBtn);
 
         audioClient = new MainConversation(transferManager);
 
         // Disable microphone button
-        audio.setVisibility(View.GONE);
+        btnAudio.setVisibility(View.GONE);
 
         // Microphone button pressed/released
-        audio.setOnTouchListener(new View.OnTouchListener() {
+        btnAudio.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
 
@@ -154,7 +156,7 @@ public class MainActivity extends Activity {
         });
 
         // Send CONNECT request
-        connect.setOnClickListener(new OnClickListener() {
+        btnConnect.setOnClickListener(new OnClickListener() {
 
             @Override
             public void onClick(View arg0) {
@@ -163,7 +165,7 @@ public class MainActivity extends Activity {
 
                 // Handle UI changes
                 listView.setVisibility(ListView.VISIBLE);
-                connect.setEnabled(false);
+                btnConnect.setEnabled(false);
 
                 // List to store all paired device information
                 deviceList = new ArrayList<>();
@@ -192,11 +194,36 @@ public class MainActivity extends Activity {
         });
 
         // Disconnect
-        disconnect.setOnClickListener(new OnClickListener() {
+        btnDisconnect.setOnClickListener(new OnClickListener() {
 
             @Override
             public void onClick(View arg0) {
 
+                /*boolean disconnectListen = false;
+                boolean disconnectConnect = false;
+                // Enable buttons and disable listView
+                btnConnect.setEnabled(true);
+                listView.setVisibility(ListView.GONE);
+
+                audioClient.destroyProcesses();
+
+                Log.d("BLUETOOTH", "Disconnect");
+
+                TODO
+                if (disconnectListen || disconnectConnect) {
+                    // Disconnect successful - Handle UI element change
+                    btnAudio.setVisibility(View.GONE);
+                    listen.setEnabled(true);
+                    btnConnect.setEnabled(true);
+                } else {
+                    // Unsuccessful btnDisconnect - Do nothing
+                }*/
+            }
+        });
+
+        btnEnable.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
                 if (!transferManager.isWifiEnable()) {
                     transferManager.enableWifi(new ListenerAdapter() {
                         @Override
@@ -231,31 +258,10 @@ public class MainActivity extends Activity {
                         e.printStackTrace();
                     }
                 }
-
-
-                /*boolean disconnectListen = false;
-                boolean disconnectConnect = false;
-                // Enable buttons and disable listView
-                connect.setEnabled(true);
-                listView.setVisibility(ListView.GONE);
-
-                audioClient.destroyProcesses();
-
-                Log.d("BLUETOOTH", "Disconnect");
-
-                TODO
-                if (disconnectListen || disconnectConnect) {
-                    // Disconnect successful - Handle UI element change
-                    audio.setVisibility(View.GONE);
-                    listen.setEnabled(true);
-                    connect.setEnabled(true);
-                } else {
-                    // Unsuccessful disconnect - Do nothing
-                }*/
             }
         });
 
-        // Attempt to connect when paired device is clicked in ListView
+        // Attempt to btnConnect when paired device is clicked in ListView
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -268,7 +274,7 @@ public class MainActivity extends Activity {
                     e.printStackTrace();
                 }
 
-                Log.d("BLUETOOTH", "Attempting to connect");
+                Log.d("BLUETOOTH", "Attempting to btnConnect");
             }
         });
     }

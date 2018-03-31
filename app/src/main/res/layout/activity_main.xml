@@ -27,36 +27,36 @@
         tools:layout_conversion_absoluteWidth="256dp"
         tools:layout_conversion_absoluteX="77dp"
         tools:layout_conversion_absoluteY="173dp" />
-    
+
+    <Button
+        android:id="@+id/connect"
+        android:layout_width="120dp"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginTop="8dp"
+        android:text="@string/connect"
+        app:layout_constraintLeft_toRightOf="@+id/enable"
+        app:layout_constraintRight_toLeftOf="@+id/disconnect"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:layout_conversion_absoluteHeight="48dp"
+        tools:layout_conversion_absoluteWidth="120dp"
+        tools:layout_conversion_absoluteX="145dp"
+        tools:layout_conversion_absoluteY="22dp" />
+
     <Button
         android:id="@+id/enable"
         android:layout_width="120dp"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:layout_marginRight="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:text="@string/enable"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:layout_conversion_absoluteHeight="48dp"
         tools:layout_conversion_absoluteWidth="120dp"
-        tools:layout_conversion_absoluteX="282dp"
-        tools:layout_conversion_absoluteY="22dp" />
-
-    <Button
-        android:id="@+id/connect"
-        android:layout_width="120dp"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:layout_marginRight="8dp"
-        android:layout_marginTop="8dp"
-        android:text="@string/connect"
-        app:layout_constraintLeft_toLeftOf="@id/enable"
-        app:layout_constraintRight_toRightOf="@id/enable"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:layout_conversion_absoluteHeight="48dp"
-        tools:layout_conversion_absoluteWidth="120dp"
-        tools:layout_conversion_absoluteX="282dp"
+        tools:layout_conversion_absoluteX="8dp"
         tools:layout_conversion_absoluteY="22dp" />
 
     <Button
