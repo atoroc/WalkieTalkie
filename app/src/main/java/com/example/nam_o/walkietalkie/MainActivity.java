@@ -1,11 +1,7 @@
 package com.example.nam_o.walkietalkie;
 
-import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothSocket;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -19,6 +15,7 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.montefiore.gaulthiergain.adhoclibrary.appframework.ListenerAdapter;
 import com.montefiore.gaulthiergain.adhoclibrary.appframework.ListenerApp;
 import com.montefiore.gaulthiergain.adhoclibrary.appframework.TransferManager;
 import com.montefiore.gaulthiergain.adhoclibrary.datalink.exceptions.DeviceException;
@@ -28,8 +25,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
 
 public class MainActivity extends Activity {
 
@@ -47,6 +42,7 @@ public class MainActivity extends Activity {
     private ArrayAdapter<AdHocDevice> adapter;
 
     private MainConversation audioClient;
+    private TransferManager transferManager;
 
     private boolean listenAttempt = false;
     private boolean connectAttempt = false;
@@ -59,7 +55,7 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        final TransferManager transferManager = new TransferManager(true, getApplicationContext(), new ListenerApp() {
+        transferManager = new TransferManager(true, getApplicationContext(), new ListenerApp() {
             @Override
             public void onDiscoveryCompleted(HashMap<String, AdHocDevice> mapAddressDevice) {
 
@@ -72,7 +68,7 @@ public class MainActivity extends Activity {
             }
 
             @Override
-            public void catchException(Exception e) {
+            public void traceException(Exception e) {
                 e.printStackTrace();
             }
 
@@ -110,11 +106,13 @@ public class MainActivity extends Activity {
         });
 
         try {
-            transferManager.getConfig().setJson(true);
-            Log.d("[AdHoc]", transferManager.getConfig().toString());
+            transferManager.getConfig().setJson(false);
             transferManager.start();
-        } catch (DeviceException e) {
-            e.printStackTrace();
+
+            Log.d("[AdHoc]", transferManager.getConfig().toString());
+            Log.d("[AdHoc] BT: ", String.valueOf(transferManager.isBluetoothEnable()));
+            Log.d("[AdHoc] WF: ", String.valueOf(transferManager.isWifiEnable()));
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -199,7 +197,43 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View arg0) {
 
-                boolean disconnectListen = false;
+                if (!transferManager.isWifiEnable()) {
+                    transferManager.enableWifi(new ListenerAdapter() {
+                        @Override
+                        public void onEnableBluetooth(boolean success) {
+                            if (success) {
+                                Log.d("[AdHoc]", "Bluetooth is enabled");
+                            } else {
+                                Log.d("[AdHoc]", "Bluetooth is not enabled");
+                            }
+
+                            Log.d("[AdHoc] BT: ", String.valueOf(transferManager.isBluetoothEnable()));
+                            Log.d("[AdHoc] WF: ", String.valueOf(transferManager.isWifiEnable()));
+                        }
+
+                        @Override
+                        public void onEnableWifi(boolean success) {
+                            if (success) {
+                                Log.d("[AdHoc]", "WiFi is enabled");
+                            } else {
+                                Log.d("[AdHoc]", "WiFi is not enabled");
+                            }
+
+                            Log.d("[AdHoc] BT: ", String.valueOf(transferManager.isBluetoothEnable()));
+                            Log.d("[AdHoc] WF: ", String.valueOf(transferManager.isWifiEnable()));
+                        }
+                    });
+
+                } else {
+                    try {
+                        transferManager.disableWifi();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+
+                /*boolean disconnectListen = false;
                 boolean disconnectConnect = false;
                 // Enable buttons and disable listView
                 connect.setEnabled(true);
@@ -209,7 +243,7 @@ public class MainActivity extends Activity {
 
                 Log.d("BLUETOOTH", "Disconnect");
 
-                /*TODO
+                TODO
                 if (disconnectListen || disconnectConnect) {
                     // Disconnect successful - Handle UI element change
                     audio.setVisibility(View.GONE);
@@ -250,4 +284,26 @@ public class MainActivity extends Activity {
         }
         if (!permissionToRecordAccepted) finish();
     }
+
+    /*@Override
+    protected void onStop() {
+        try {
+            transferManager.stopListening();
+            transferManager.unregisterAdapter();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        super.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        try {
+            transferManager.stopListening();
+            transferManager.unregisterAdapter();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        super.onDestroy();
+    }*/
 }

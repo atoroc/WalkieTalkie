@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">WalkieTalkie</string>
+    <string name="disconnect">Disconnect</string>
+    <string name="listen">Listen</string>
+    <string name="connect">connect</string>
+    <string name="enable">enable</string>
+</resources>
