@@ -30,6 +30,7 @@ public class MainActivity extends Activity {
 
     // Requesting permission to RECORD_AUDIO
     private static final int REQUEST_RECORD_AUDIO_PERMISSION = 200;
+    public static final String TAG = "[TalkieWalkie]";
     private boolean permissionToRecordAccepted = false;
 
     // Define UI elements
@@ -64,7 +65,7 @@ public class MainActivity extends Activity {
 
             @Override
             public void receivedData(String senderName, String senderAddress, Object pdu) {
-                Log.d("", "Receive from" + senderName);
+                Log.d(TAG, "Receive from" + senderName);
                 audioClient.setData((byte[]) pdu);
             }
 
@@ -75,7 +76,8 @@ public class MainActivity extends Activity {
 
             @Override
             public void onConnectionClosed(String remoteAddress, String remoteName) {
-
+                Toast.makeText(MainActivity.this, "Disconnect with " + remoteAddress,
+                        Toast.LENGTH_LONG).show();
             }
 
             @Override
@@ -83,15 +85,14 @@ public class MainActivity extends Activity {
 
                 // Start listening for btnAudio from other device
                 audioClient.audioCreate();
-
-                audioClient.setupStreams();
                 audioClient.startPlaying();
                 btnAudio.setVisibility(View.VISIBLE);
                 remoteAddr = remoteAddress;
                 audioClient.setRemoteAddrDevice(remoteAddress);
 
                 // Change status of UI elements
-                Toast.makeText(MainActivity.this, "Connection was successful with " + remoteAddress, Toast.LENGTH_LONG).show();
+                Toast.makeText(MainActivity.this, "Connection was successful with " +
+                        remoteAddress, Toast.LENGTH_LONG).show();
                 listView.setVisibility(ListView.GONE);
                 btnAudio.setVisibility(View.VISIBLE);
                 btnConnect.setEnabled(false);
@@ -109,21 +110,14 @@ public class MainActivity extends Activity {
         try {
             transferManager.getConfig().setJson(false);
             transferManager.start();
-
-            Log.d("[AdHoc]", transferManager.getConfig().toString());
-            Log.d("[AdHoc] BT: ", String.valueOf(transferManager.isBluetoothEnable()));
-            Log.d("[AdHoc] WF: ", String.valueOf(transferManager.isWifiEnable()));
-
+            Log.d(TAG, transferManager.getConfig().toString());
         } catch (IOException e) {
             e.printStackTrace();
         }
 
         //ActivityCompat.requestPermissions(this, permissions, REQUEST_RECORD_AUDIO_PERMISSION);
 
-        //Bluetooth
-        Log.d("BLUETOOTH", "On create");
 
-        // Identify UI elements
         listView = findViewById(R.id.listViewItems);
         btnConnect = findViewById(R.id.connect);
         btnEnable = findViewById(R.id.enable);
@@ -142,12 +136,9 @@ public class MainActivity extends Activity {
 
                 int action = event.getAction();
                 if (action == MotionEvent.ACTION_DOWN) {
-                    Log.d("TAG", "MotionEvent.ACTION_DOWN");
                     audioClient.stopPlaying();
                     audioClient.startRecording();
-
                 } else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
-                    Log.d("TAG", "MotionEvent.ACTION_UP");
                     audioClient.stopRecording();
                     audioClient.startPlaying();
                 }
@@ -155,13 +146,12 @@ public class MainActivity extends Activity {
             }
         });
 
-        // Send CONNECT request
         btnConnect.setOnClickListener(new OnClickListener() {
 
             @Override
             public void onClick(View arg0) {
 
-                Log.d("BLUETOOTH", "Connect button pressed");
+                Log.d(TAG, "Connect button pressed");
 
                 // Handle UI changes
                 listView.setVisibility(ListView.VISIBLE);
@@ -173,19 +163,18 @@ public class MainActivity extends Activity {
 
                 // Populate list with the paired device information
                 if (pairedDevices.size() > 0) {
-                    Log.d("BLUETOOTH", "Pair devices > 0");
+                    Log.d(TAG, "Pair devices > 0");
                     for (Map.Entry<String, AdHocDevice> entry : pairedDevices.entrySet()) {
                         deviceList.add(entry.getValue());
                     }
                 } else {
-                    Log.d("BLUETOOTH", "No paired devices found");
+                    Log.d(TAG, "No paired devices found");
                 }
 
                 // No devices found
                 if (deviceList.size() == 0) {
                     deviceList.add(new AdHocDevice("No devices found", ""));
                 }
-
 
                 // Populate List view with device information
                 adapter = new ArrayAdapter<>(MainActivity.this, android.R.layout.simple_list_item_1, deviceList);
@@ -207,7 +196,7 @@ public class MainActivity extends Activity {
 
                 audioClient.destroyProcesses();
 
-                Log.d("BLUETOOTH", "Disconnect");
+                Log.d(TAG, "Disconnect");
 
                 TODO
                 if (disconnectListen || disconnectConnect) {
@@ -221,39 +210,39 @@ public class MainActivity extends Activity {
             }
         });
 
+        if (transferManager.isBluetoothEnable()) {
+            btnEnable.setText(R.string.disable);
+        } else {
+            btnEnable.setText(R.string.enable);
+        }
+
         btnEnable.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!transferManager.isWifiEnable()) {
-                    transferManager.enableWifi(new ListenerAdapter() {
+                if (!transferManager.isBluetoothEnable()) {
+                    transferManager.enableBluetooth(0, new ListenerAdapter() {
                         @Override
                         public void onEnableBluetooth(boolean success) {
                             if (success) {
-                                Log.d("[AdHoc]", "Bluetooth is enabled");
+                                Log.d(TAG, "Bluetooth is enabled");
                             } else {
-                                Log.d("[AdHoc]", "Bluetooth is not enabled");
+                                Log.d(TAG, "Bluetooth is not enabled");
                             }
-
-                            Log.d("[AdHoc] BT: ", String.valueOf(transferManager.isBluetoothEnable()));
-                            Log.d("[AdHoc] WF: ", String.valueOf(transferManager.isWifiEnable()));
                         }
 
                         @Override
                         public void onEnableWifi(boolean success) {
                             if (success) {
-                                Log.d("[AdHoc]", "WiFi is enabled");
+                                Log.d(TAG, "WiFi is enabled");
                             } else {
-                                Log.d("[AdHoc]", "WiFi is not enabled");
+                                Log.d(TAG, "WiFi is not enabled");
                             }
-
-                            Log.d("[AdHoc] BT: ", String.valueOf(transferManager.isBluetoothEnable()));
-                            Log.d("[AdHoc] WF: ", String.valueOf(transferManager.isWifiEnable()));
                         }
                     });
 
                 } else {
                     try {
-                        transferManager.disableWifi();
+                        transferManager.disableBluetooth();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -266,15 +255,13 @@ public class MainActivity extends Activity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
-                Log.d("BLUETOOTH", "pos: " + position + " id: " + id + " device: " + deviceList.get(position).getName());
-
                 try {
                     transferManager.connect(deviceList.get(position));
                 } catch (DeviceException e) {
                     e.printStackTrace();
                 }
 
-                Log.d("BLUETOOTH", "Attempting to btnConnect");
+                Log.d(TAG, "Attempting to Connect");
             }
         });
     }
@@ -291,25 +278,13 @@ public class MainActivity extends Activity {
         if (!permissionToRecordAccepted) finish();
     }
 
-    /*@Override
-    protected void onStop() {
-        try {
-            transferManager.stopListening();
-            transferManager.unregisterAdapter();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        super.onStop();
-    }
-
     @Override
     protected void onDestroy() {
         try {
             transferManager.stopListening();
-            transferManager.unregisterAdapter();
         } catch (IOException e) {
             e.printStackTrace();
         }
         super.onDestroy();
-    }*/
+    }
 }
