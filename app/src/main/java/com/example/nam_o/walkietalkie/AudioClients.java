@@ -11,12 +11,15 @@ import android.util.Log;
 import com.montefiore.gaulthiergain.adhoclibrary.appframework.TransferManager;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 
-public class MainConversation extends Activity {
+public class AudioClients extends Activity {
 
-    public static final int RATE_IN_HZ = 16000;
+    public static final int RATE_IN_HZ = 44100;
+    private int[] mSampleRates = new int[]{8000, 11025, 22050, 44100};
     public static final String TAG = "TAG";
+    public int nbClients;
 
     private final int minSize;
     private final int bufferSize;
@@ -28,12 +31,14 @@ public class MainConversation extends Activity {
     private byte buffer[] = null;
     private byte[] data;
     private boolean isRecording = false;
-    private String remoteAddrDevice;
+    private ArrayList<String> arrayRemoteDevices;
 
-    public MainConversation(TransferManager transferManager) {
+    public AudioClients(TransferManager transferManager) {
         this.transferManager = transferManager;
         this.minSize = AudioTrack.getMinBufferSize(RATE_IN_HZ, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT);
         this.bufferSize = minSize;
+        this.nbClients = 0;
+        this.arrayRemoteDevices = new ArrayList<>();
     }
 
     // Based on previous project and
@@ -63,7 +68,9 @@ public class MainConversation extends Activity {
             try {
                 recorder.read(buffer, 0, bufferSize);
                 //outStream.write(buffer);
-                transferManager.sendMessageTo(buffer, remoteAddrDevice);
+                for (String remoteAddrDevice : arrayRemoteDevices) {
+                    transferManager.sendMessageTo(buffer, remoteAddrDevice);
+                }
             } catch (IOException e) {
                 Log.d(TAG, "Error when sending recording");
             }
@@ -138,11 +145,59 @@ public class MainConversation extends Activity {
         recorder.release();
     }
 
-    public void setRemoteAddrDevice(String remoteAddrDevice) {
-        this.remoteAddrDevice = remoteAddrDevice;
+    public void addRemoteAddr(String remoteAddrDevice) {
+        this.arrayRemoteDevices.add(remoteAddrDevice);
     }
 
     public void setData(byte[] data) {
         this.data = data;
+    }
+
+    private AudioRecord findAudioRecord() {
+        for (int rate : mSampleRates) {
+            for (short audioFormat : new short[]{AudioFormat.ENCODING_PCM_8BIT, AudioFormat.ENCODING_PCM_16BIT}) {
+                for (short channelConfig : new short[]{AudioFormat.CHANNEL_IN_MONO, AudioFormat.CHANNEL_IN_STEREO}) {
+                    try {
+                        Log.d(TAG, "Attempting rate " + rate + "Hz, bits: " + audioFormat + ", channel: "
+                                + channelConfig);
+                        int bufferSize = AudioRecord.getMinBufferSize(rate, channelConfig, audioFormat);
+
+                        if (bufferSize != AudioRecord.ERROR_BAD_VALUE) {
+                            // check if we can instantiate and have a success
+                            AudioRecord recorder = new AudioRecord(MediaRecorder.AudioSource.MIC, rate, channelConfig, audioFormat, bufferSize);
+
+                            if (recorder.getState() == AudioRecord.STATE_INITIALIZED) {
+                                Log.d(TAG, "Success");
+                                return recorder;
+                            } else {
+                                Log.d(TAG, String.valueOf(recorder.getState()));
+                            }
+
+                        }
+                    } catch (Exception e) {
+                        Log.v(TAG, rate + "Exception, keep trying.", e);
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    public int getNbClients() {
+        return nbClients;
+    }
+
+    public void clientDisconnect() {
+        nbClients--;
+    }
+
+    public void clientConnect() {
+        nbClients++;
+    }
+
+    public void disconnect(String remoteAddrDevice) {
+        if (arrayRemoteDevices.contains(remoteAddrDevice)) {
+            arrayRemoteDevices.remove(remoteAddrDevice);
+        }
     }
 }

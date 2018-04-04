@@ -1,10 +1,12 @@
 package com.example.nam_o.walkietalkie;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -18,7 +20,9 @@ import android.widget.Toast;
 import com.montefiore.gaulthiergain.adhoclibrary.appframework.ListenerAdapter;
 import com.montefiore.gaulthiergain.adhoclibrary.appframework.ListenerApp;
 import com.montefiore.gaulthiergain.adhoclibrary.appframework.TransferManager;
+import com.montefiore.gaulthiergain.adhoclibrary.appframework.exceptions.MaxThreadReachedException;
 import com.montefiore.gaulthiergain.adhoclibrary.datalink.exceptions.DeviceException;
+import com.montefiore.gaulthiergain.adhoclibrary.datalink.exceptions.NoConnectionException;
 import com.montefiore.gaulthiergain.adhoclibrary.network.datalinkmanager.AdHocDevice;
 
 import java.io.IOException;
@@ -43,12 +47,10 @@ public class MainActivity extends Activity {
     private ArrayList<AdHocDevice> deviceList;
     private ArrayAdapter<AdHocDevice> adapter;
 
-    private MainConversation audioClient;
+    private AudioClients audioClients;
     private TransferManager transferManager;
 
-    private boolean listenAttempt = false;
-    private boolean connectAttempt = false;
-    private String remoteAddr;
+    private String[] permissions = {Manifest.permission.RECORD_AUDIO};
 
     // Initialization of layout
     @SuppressLint("ClickableViewAccessibility")
@@ -56,6 +58,8 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        ActivityCompat.requestPermissions(this, permissions, REQUEST_RECORD_AUDIO_PERMISSION);
 
         transferManager = new TransferManager(true, getApplicationContext(), new ListenerApp() {
             @Override
@@ -66,7 +70,7 @@ public class MainActivity extends Activity {
             @Override
             public void receivedData(String senderName, String senderAddress, Object pdu) {
                 Log.d(TAG, "Receive from" + senderName);
-                audioClient.setData((byte[]) pdu);
+                audioClients.setData((byte[]) pdu);
             }
 
             @Override
@@ -78,25 +82,42 @@ public class MainActivity extends Activity {
             public void onConnectionClosed(String remoteAddress, String remoteName) {
                 Toast.makeText(MainActivity.this, "Disconnect with " + remoteAddress,
                         Toast.LENGTH_LONG).show();
+
+                audioClients.clientDisconnect();
+
+                audioClients.disconnect(remoteAddress);
+                if (audioClients.getNbClients() == 0) {
+                    // Enable buttons and disable listView
+                    btnConnect.setEnabled(true);
+                    listView.setVisibility(ListView.GONE);
+                    audioClients.destroyProcesses();
+
+                    // Handle UI element change
+                    btnAudio.setVisibility(View.GONE);
+                    btnDisconnect.setEnabled(false);
+                    btnConnect.setEnabled(true);
+                }
             }
 
             @Override
             public void onConnection(String remoteAddress, String remoteName) {
 
-                // Start listening for btnAudio from other device
-                audioClient.audioCreate();
-                audioClient.startPlaying();
-                btnAudio.setVisibility(View.VISIBLE);
-                remoteAddr = remoteAddress;
-                audioClient.setRemoteAddrDevice(remoteAddress);
-
-                // Change status of UI elements
                 Toast.makeText(MainActivity.this, "Connection was successful with " +
                         remoteAddress, Toast.LENGTH_LONG).show();
-                listView.setVisibility(ListView.GONE);
-                btnAudio.setVisibility(View.VISIBLE);
-                btnConnect.setEnabled(false);
-                connectAttempt = true;
+
+                audioClients.addRemoteAddr(remoteAddress);
+                if (audioClients.getNbClients() == 0) {
+
+                    // Start listening for btnAudio from other device
+                    audioClients.audioCreate();
+                    audioClients.startPlaying();
+                    btnAudio.setVisibility(View.VISIBLE);
+                    listView.setVisibility(ListView.GONE);
+                    btnDisconnect.setEnabled(true);
+                    btnConnect.setEnabled(false);
+                }
+
+                audioClients.clientConnect();
             }
 
             @Override
@@ -108,15 +129,15 @@ public class MainActivity extends Activity {
         });
 
         try {
+            transferManager.getConfig().setNbThreadBt(3);
             transferManager.getConfig().setJson(false);
             transferManager.start();
             Log.d(TAG, transferManager.getConfig().toString());
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (MaxThreadReachedException e) {
+            e.printStackTrace();
         }
-
-        //ActivityCompat.requestPermissions(this, permissions, REQUEST_RECORD_AUDIO_PERMISSION);
-
 
         listView = findViewById(R.id.listViewItems);
         btnConnect = findViewById(R.id.connect);
@@ -124,10 +145,11 @@ public class MainActivity extends Activity {
         btnDisconnect = findViewById(R.id.disconnect);
         btnAudio = findViewById(R.id.audioBtn);
 
-        audioClient = new MainConversation(transferManager);
+        audioClients = new AudioClients(transferManager);
 
         // Disable microphone button
         btnAudio.setVisibility(View.GONE);
+        btnDisconnect.setEnabled(false);
 
         // Microphone button pressed/released
         btnAudio.setOnTouchListener(new View.OnTouchListener() {
@@ -136,11 +158,11 @@ public class MainActivity extends Activity {
 
                 int action = event.getAction();
                 if (action == MotionEvent.ACTION_DOWN) {
-                    audioClient.stopPlaying();
-                    audioClient.startRecording();
+                    audioClients.stopPlaying();
+                    audioClients.startRecording();
                 } else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
-                    audioClient.stopRecording();
-                    audioClient.startPlaying();
+                    audioClients.stopRecording();
+                    audioClients.startPlaying();
                 }
                 return true;
             }
@@ -188,25 +210,24 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View arg0) {
 
-                /*boolean disconnectListen = false;
-                boolean disconnectConnect = false;
+                Log.d(TAG, "Disconnect");
+
                 // Enable buttons and disable listView
                 btnConnect.setEnabled(true);
                 listView.setVisibility(ListView.GONE);
+                audioClients.destroyProcesses();
 
-                audioClient.destroyProcesses();
+                try {
+                    transferManager.disconnectAll();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (NoConnectionException e) {
+                    e.printStackTrace();
+                }
 
-                Log.d(TAG, "Disconnect");
-
-                TODO
-                if (disconnectListen || disconnectConnect) {
-                    // Disconnect successful - Handle UI element change
-                    btnAudio.setVisibility(View.GONE);
-                    listen.setEnabled(true);
-                    btnConnect.setEnabled(true);
-                } else {
-                    // Unsuccessful btnDisconnect - Do nothing
-                }*/
+                // Handle UI element change
+                btnAudio.setVisibility(View.GONE);
+                btnConnect.setEnabled(true);
             }
         });
 
@@ -225,8 +246,9 @@ public class MainActivity extends Activity {
                         public void onEnableBluetooth(boolean success) {
                             if (success) {
                                 Log.d(TAG, "Bluetooth is enabled");
+                                btnEnable.setText(R.string.disable);
                             } else {
-                                Log.d(TAG, "Bluetooth is not enabled");
+                                Log.d(TAG, "unable to enable Bluetooth");
                             }
                         }
 
@@ -235,7 +257,7 @@ public class MainActivity extends Activity {
                             if (success) {
                                 Log.d(TAG, "WiFi is enabled");
                             } else {
-                                Log.d(TAG, "WiFi is not enabled");
+                                Log.d(TAG, "unable to enable WiFi");
                             }
                         }
                     });
@@ -243,6 +265,7 @@ public class MainActivity extends Activity {
                 } else {
                     try {
                         transferManager.disableBluetooth();
+                        btnEnable.setText(R.string.disable);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
