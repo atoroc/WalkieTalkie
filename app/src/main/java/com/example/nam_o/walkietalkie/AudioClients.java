@@ -111,7 +111,6 @@ public class AudioClients extends Activity {
 
     }
 
-
     // Receive audio and write into audio track object for playback
     public void receiveRecording() {
 

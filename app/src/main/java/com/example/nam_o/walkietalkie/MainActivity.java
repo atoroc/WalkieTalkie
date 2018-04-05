@@ -23,7 +23,7 @@ import com.montefiore.gaulthiergain.adhoclibrary.appframework.TransferManager;
 import com.montefiore.gaulthiergain.adhoclibrary.appframework.exceptions.MaxThreadReachedException;
 import com.montefiore.gaulthiergain.adhoclibrary.datalink.exceptions.DeviceException;
 import com.montefiore.gaulthiergain.adhoclibrary.datalink.exceptions.NoConnectionException;
-import com.montefiore.gaulthiergain.adhoclibrary.network.datalinkmanager.AdHocDevice;
+import com.montefiore.gaulthiergain.adhoclibrary.datalink.service.AdHocDevice;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -68,8 +68,8 @@ public class MainActivity extends Activity {
             }
 
             @Override
-            public void receivedData(String senderName, String senderAddress, Object pdu) {
-                Log.d(TAG, "Receive from" + senderName);
+            public void onReceivedData(String senderName, String senderAddress, Object pdu) {
+                Log.d(TAG, "Receive from " + senderName + " " + senderAddress);
                 audioClients.setData((byte[]) pdu);
             }
 
@@ -100,7 +100,7 @@ public class MainActivity extends Activity {
             }
 
             @Override
-            public void onConnection(String remoteAddress, String remoteName) {
+            public void onConnection(String remoteAddress, String remoteName, int hops) {
 
                 Toast.makeText(MainActivity.this, "Connection was successful with " +
                         remoteAddress, Toast.LENGTH_LONG).show();
@@ -131,6 +131,7 @@ public class MainActivity extends Activity {
         try {
             transferManager.getConfig().setNbThreadBt(3);
             transferManager.getConfig().setJson(false);
+            transferManager.getConfig().setReliableTransportWifi(false);
             transferManager.start();
             Log.d(TAG, transferManager.getConfig().toString());
         } catch (IOException e) {
@@ -195,7 +196,7 @@ public class MainActivity extends Activity {
 
                 // No devices found
                 if (deviceList.size() == 0) {
-                    deviceList.add(new AdHocDevice("No devices found", ""));
+                    deviceList.add(new AdHocDevice("No devices found", "", -1));
                 }
 
                 // Populate List view with device information
@@ -240,7 +241,35 @@ public class MainActivity extends Activity {
         btnEnable.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!transferManager.isBluetoothEnable()) {
+
+                int i = 0;
+                for (String name : transferManager.getActifAdapterNames()) {
+                    Log.d(TAG, (++i) + "Name: " + name);
+                }
+
+                if (transferManager.getActifAdapterNames().get(0).equals("SALUT")) {
+                    Log.d(TAG, "reset adapter name");
+                    try {
+                        transferManager.resetBluetoothName();
+                    } catch (DeviceException e) {
+                        e.printStackTrace();
+                    }
+                }else{
+                    try {
+                        if (transferManager.updateBluetoothName("SALUT")) {
+                            Log.d(TAG, "Update wifi Name Ok");
+                        }
+                    } catch (DeviceException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                for (String name : transferManager.getActifAdapterNames()) {
+                    Log.d(TAG, (++i) + "Name: " + name);
+                }
+
+
+                /*if (!transferManager.isBluetoothEnable()) {
                     transferManager.enableBluetooth(0, new ListenerAdapter() {
                         @Override
                         public void onEnableBluetooth(boolean success) {
@@ -269,7 +298,7 @@ public class MainActivity extends Activity {
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                }
+                }*/
             }
         });
 
@@ -287,6 +316,8 @@ public class MainActivity extends Activity {
                 Log.d(TAG, "Attempting to Connect");
             }
         });
+
+
     }
 
     @Override
@@ -305,7 +336,10 @@ public class MainActivity extends Activity {
     protected void onDestroy() {
         try {
             transferManager.stopListening();
+            transferManager.resetWifiName();
         } catch (IOException e) {
+            e.printStackTrace();
+        } catch (DeviceException e) {
             e.printStackTrace();
         }
         super.onDestroy();
