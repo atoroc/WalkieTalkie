@@ -24,6 +24,7 @@ import com.montefiore.gaulthiergain.adhoclibrary.appframework.exceptions.MaxThre
 import com.montefiore.gaulthiergain.adhoclibrary.datalink.exceptions.DeviceException;
 import com.montefiore.gaulthiergain.adhoclibrary.datalink.exceptions.NoConnectionException;
 import com.montefiore.gaulthiergain.adhoclibrary.datalink.service.AdHocDevice;
+import com.montefiore.gaulthiergain.adhoclibrary.network.exceptions.DeviceAlreadyConnectedException;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -34,7 +35,7 @@ public class MainActivity extends Activity {
 
     // Requesting permission to RECORD_AUDIO
     private static final int REQUEST_RECORD_AUDIO_PERMISSION = 200;
-    public static final String TAG = "[TalkieWalkie]";
+    public static final String TAG = "[TalkieWalkie][Main]";
     private boolean permissionToRecordAccepted = false;
 
     // Define UI elements
@@ -125,6 +126,7 @@ public class MainActivity extends Activity {
                 // Change status of UI elements if connection was unsuccessful
                 Toast.makeText(MainActivity.this, "Connection was unsuccessful", Toast.LENGTH_LONG).show();
                 listView.setVisibility(ListView.GONE);
+                btnConnect.setEnabled(true);
             }
         });
 
@@ -216,7 +218,6 @@ public class MainActivity extends Activity {
                 // Enable buttons and disable listView
                 btnConnect.setEnabled(true);
                 listView.setVisibility(ListView.GONE);
-                audioClients.destroyProcesses();
 
                 try {
                     transferManager.disconnectAll();
@@ -283,6 +284,8 @@ public class MainActivity extends Activity {
                 try {
                     transferManager.connect(deviceList.get(position));
                 } catch (DeviceException e) {
+                    e.printStackTrace();
+                } catch (DeviceAlreadyConnectedException e) {
                     e.printStackTrace();
                 }
 

@@ -17,8 +17,9 @@ import java.util.ArrayList;
 public class AudioClients extends Activity {
 
     public static final int RATE_IN_HZ = 44100;
+    private boolean isEnable;
     private int[] mSampleRates = new int[]{8000, 11025, 22050, 44100};
-    public static final String TAG = "TAG";
+    public static final String TAG = "[TalkieWalkie][Audio]";
     public int nbClients;
 
     private final int minSize;
@@ -64,7 +65,7 @@ public class AudioClients extends Activity {
     // Method for sending Audio
     public void sendRecording() {
         // Infinite loop until microphone button is released
-        while (isRecording) {
+        while (isRecording && isEnable) {
             try {
                 recorder.read(buffer, 0, bufferSize);
                 //outStream.write(buffer);
@@ -74,15 +75,20 @@ public class AudioClients extends Activity {
             } catch (IOException e) {
                 Log.d(TAG, "Error when sending recording");
             }
-
         }
+
+        Log.d(TAG, "End recording");
     }
 
     // Stop Recording and free up resources
     public void stopRecording() {
         if (recorder != null) {
             isRecording = false;
-            recorder.stop();
+            try {
+                recorder.stop();
+            } catch (IllegalStateException e) {
+                //catch exception
+            }
         }
     }
 
@@ -95,6 +101,8 @@ public class AudioClients extends Activity {
         recorder = new AudioRecord(MediaRecorder.AudioSource.MIC, RATE_IN_HZ,
                 AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT,
                 bufferSize);
+
+        isEnable = true;
     }
 
     // Playback received audio
@@ -119,7 +127,7 @@ public class AudioClients extends Activity {
         track.play();
 
         int i = 0;
-        while (!isRecording) {
+        while (!isRecording && isEnable) {
             if (data == null || data.length == 0) {
                 //Do nothing
             } else {
@@ -128,6 +136,8 @@ public class AudioClients extends Activity {
                 data = null;
             }
         }
+
+        Log.d(TAG, "end playing");
     }
 
     // Stop playing and free up resources
@@ -142,6 +152,9 @@ public class AudioClients extends Activity {
         //Release resources for audio objects
         track.release();
         recorder.release();
+        track = null;
+        recorder = null;
+        isEnable = false;
     }
 
     public void addRemoteAddr(String remoteAddrDevice) {
