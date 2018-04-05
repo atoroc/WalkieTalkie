@@ -223,8 +223,6 @@ public class MainActivity extends Activity {
                     transferManager.disconnectAll();
                 } catch (IOException e) {
                     e.printStackTrace();
-                } catch (NoConnectionException e) {
-                    e.printStackTrace();
                 }
 
                 // Handle UI element change
