@@ -242,34 +242,7 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
 
-                int i = 0;
-                for (String name : transferManager.getActifAdapterNames()) {
-                    Log.d(TAG, (++i) + "Name: " + name);
-                }
-
-                if (transferManager.getActifAdapterNames().get(0).equals("SALUT")) {
-                    Log.d(TAG, "reset adapter name");
-                    try {
-                        transferManager.resetBluetoothName();
-                    } catch (DeviceException e) {
-                        e.printStackTrace();
-                    }
-                }else{
-                    try {
-                        if (transferManager.updateBluetoothName("SALUT")) {
-                            Log.d(TAG, "Update wifi Name Ok");
-                        }
-                    } catch (DeviceException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-                for (String name : transferManager.getActifAdapterNames()) {
-                    Log.d(TAG, (++i) + "Name: " + name);
-                }
-
-
-                /*if (!transferManager.isBluetoothEnable()) {
+                if (!transferManager.isBluetoothEnable()) {
                     transferManager.enableBluetooth(0, new ListenerAdapter() {
                         @Override
                         public void onEnableBluetooth(boolean success) {
@@ -277,7 +250,7 @@ public class MainActivity extends Activity {
                                 Log.d(TAG, "Bluetooth is enabled");
                                 btnEnable.setText(R.string.disable);
                             } else {
-                                Log.d(TAG, "unable to enable Bluetooth");
+                                Log.d(TAG, "Unable to enable Bluetooth");
                             }
                         }
 
@@ -286,7 +259,7 @@ public class MainActivity extends Activity {
                             if (success) {
                                 Log.d(TAG, "WiFi is enabled");
                             } else {
-                                Log.d(TAG, "unable to enable WiFi");
+                                Log.d(TAG, "Unable to enable WiFi");
                             }
                         }
                     });
@@ -298,7 +271,7 @@ public class MainActivity extends Activity {
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                }*/
+                }
             }
         });
 
