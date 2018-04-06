@@ -1,4 +1,4 @@
-package com.example.nam_o.walkietalkie;
+package com.montefiore.gaulthiergain.walkietalkie;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -22,9 +22,9 @@ import com.montefiore.gaulthiergain.adhoclibrary.appframework.ListenerApp;
 import com.montefiore.gaulthiergain.adhoclibrary.appframework.TransferManager;
 import com.montefiore.gaulthiergain.adhoclibrary.appframework.exceptions.MaxThreadReachedException;
 import com.montefiore.gaulthiergain.adhoclibrary.datalink.exceptions.DeviceException;
-import com.montefiore.gaulthiergain.adhoclibrary.datalink.exceptions.NoConnectionException;
 import com.montefiore.gaulthiergain.adhoclibrary.datalink.service.AdHocDevice;
 import com.montefiore.gaulthiergain.adhoclibrary.network.exceptions.DeviceAlreadyConnectedException;
+import com.montefiore.nam_o.walkietalkie.R;
 
 import java.io.IOException;
 import java.util.ArrayList;

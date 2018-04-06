@@ -1,4 +1,4 @@
-package com.example.nam_o.walkietalkie;
+package com.montefiore.gaulthiergain.walkietalkie;
 
 /**
  * https://code.tutsplus.com/tutorials/create-a-bluetooth-scanner-with-androids-bluetooth-api--cms-24084

@@ -1,4 +1,4 @@
-package com.example.nam_o.walkietalkie;
+package com.montefiore.gaulthiergain.walkietalkie;
 
 import android.app.Activity;
 import android.media.AudioFormat;
@@ -33,6 +33,11 @@ public class AudioClients extends Activity {
     private byte[] data;
     private boolean isRecording = false;
     private ArrayList<String> arrayRemoteDevices;
+
+    public AudioClients() {
+        minSize = 0;
+        bufferSize = 0;
+    }
 
     public AudioClients(TransferManager transferManager) {
         this.transferManager = transferManager;

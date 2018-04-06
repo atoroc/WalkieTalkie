@@ -1,4 +1,4 @@
-package com.example.nam_o.walkietalkie;
+package com.montefiore.nam_o.walkietalkie;
 
 import org.junit.Test;
 

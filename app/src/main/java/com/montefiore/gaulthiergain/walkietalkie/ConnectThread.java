@@ -1,4 +1,4 @@
-package com.example.nam_o.walkietalkie;
+package com.montefiore.gaulthiergain.walkietalkie;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
