@@ -3,7 +3,7 @@ apply plugin: 'com.android.application'
 android {
     compileSdkVersion 26
     defaultConfig {
-        applicationId "com.example.nam_o.walkietalkie"
+        applicationId "com.montefiore.gaulthiergain.walkietalkie"
         minSdkVersion 16
         targetSdkVersion 26
         versionCode 1
@@ -20,7 +20,7 @@ android {
 
 //Add repositories
 
-repositories{
+repositories {
     mavenCentral()
     mavenLocal()
 }

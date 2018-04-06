@@ -1,4 +1,4 @@
-package com.montefiore.nam_o.walkietalkie;
+package com.montefiore.gaulthiergain.walkietalkie;
 
 import org.junit.Test;
 
