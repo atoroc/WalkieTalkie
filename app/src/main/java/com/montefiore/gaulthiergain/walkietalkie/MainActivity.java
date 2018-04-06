@@ -45,8 +45,8 @@ public class MainActivity extends Activity {
     private Button btnDisconnect;
     private ListView listView;
 
-    private ArrayList<AdHocDevice> deviceList;
-    private ArrayAdapter<AdHocDevice> adapter;
+    private ArrayList<ListDevices> deviceList;
+    private ArrayAdapter<ListDevices> adapter;
 
     private AudioClients audioClients;
     private TransferManager transferManager;
@@ -190,7 +190,7 @@ public class MainActivity extends Activity {
                 if (pairedDevices.size() > 0) {
                     Log.d(TAG, "Pair devices > 0");
                     for (Map.Entry<String, AdHocDevice> entry : pairedDevices.entrySet()) {
-                        deviceList.add(entry.getValue());
+                        deviceList.add(new ListDevices(entry.getValue()));
                     }
                 } else {
                     Log.d(TAG, "No paired devices found");
@@ -198,7 +198,7 @@ public class MainActivity extends Activity {
 
                 // No devices found
                 if (deviceList.size() == 0) {
-                    deviceList.add(new AdHocDevice("No devices found", "", -1));
+                    deviceList.add(new ListDevices("No devices found", ""));
                 }
 
                 // Populate List view with device information
