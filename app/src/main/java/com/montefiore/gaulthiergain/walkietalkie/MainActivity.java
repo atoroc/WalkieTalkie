@@ -21,6 +21,7 @@ import com.montefiore.gaulthiergain.adhoclibrary.appframework.ListenerAdapter;
 import com.montefiore.gaulthiergain.adhoclibrary.appframework.ListenerApp;
 import com.montefiore.gaulthiergain.adhoclibrary.appframework.TransferManager;
 import com.montefiore.gaulthiergain.adhoclibrary.appframework.exceptions.MaxThreadReachedException;
+import com.montefiore.gaulthiergain.adhoclibrary.datalink.exceptions.BluetoothBadDuration;
 import com.montefiore.gaulthiergain.adhoclibrary.datalink.exceptions.DeviceException;
 import com.montefiore.gaulthiergain.adhoclibrary.datalink.service.AdHocDevice;
 import com.montefiore.gaulthiergain.adhoclibrary.network.exceptions.DeviceAlreadyConnectedException;
@@ -63,29 +64,41 @@ public class MainActivity extends Activity {
 
         transferManager = new TransferManager(true, getApplicationContext(), new ListenerApp() {
             @Override
+            public void onDeviceDiscovered(AdHocDevice device) {
+
+            }
+
+            @Override
+            public void onDiscoveryStarted() {
+
+            }
+
+            @Override
+            public void onDiscoveryFailed(Exception exception) {
+                exception.printStackTrace();
+            }
+
+            @Override
             public void onDiscoveryCompleted(HashMap<String, AdHocDevice> mapAddressDevice) {
 
             }
 
             @Override
-            public void onReceivedData(String senderName, String senderAddress, Object pdu) {
-                Log.d(TAG, "Receive from " + senderName + " " + senderAddress);
+            public void onReceivedData(AdHocDevice adHocDevice, Object pdu) {
+                Log.d(TAG, "Receive from " + adHocDevice.toString());
                 audioClients.setData((byte[]) pdu);
             }
 
             @Override
-            public void traceException(Exception e) {
-                e.printStackTrace();
-            }
-
-            @Override
-            public void onConnectionClosed(String remoteAddress, String remoteName) {
-                Toast.makeText(MainActivity.this, "Disconnect with " + remoteAddress,
+            public void onConnectionClosed(AdHocDevice adHocDevice) {
+                Toast.makeText(MainActivity.this, "Disconnect with " + adHocDevice.getLabel(),
                         Toast.LENGTH_LONG).show();
+
+                Log.d(TAG, "Disconnect with " + adHocDevice.toString());
 
                 audioClients.clientDisconnect();
 
-                audioClients.disconnect(remoteAddress);
+                audioClients.disconnect(adHocDevice);
                 if (audioClients.getNbClients() == 0) {
                     // Enable buttons and disable listView
                     btnConnect.setEnabled(true);
@@ -100,12 +113,24 @@ public class MainActivity extends Activity {
             }
 
             @Override
-            public void onConnection(String remoteAddress, String remoteName, int hops) {
+            public void onConnectionClosedFailed(Exception e) {
+                e.printStackTrace();
+            }
+
+            @Override
+            public void processMsgException(Exception e) {
+                e.printStackTrace();
+            }
+
+            @Override
+            public void onConnection(AdHocDevice adHocDevice) {
 
                 Toast.makeText(MainActivity.this, "Connection was successful with " +
-                        remoteAddress, Toast.LENGTH_LONG).show();
+                        adHocDevice.getLabel(), Toast.LENGTH_LONG).show();
 
-                audioClients.addRemoteAddr(remoteAddress);
+                Log.d(TAG, "Connection with " + adHocDevice.toString());
+
+                audioClients.addRemoteAddr(adHocDevice);
                 if (audioClients.getNbClients() == 0) {
 
                     // Start listening for btnAudio from other device
@@ -121,7 +146,8 @@ public class MainActivity extends Activity {
             }
 
             @Override
-            public void onConnectionFailed(String deviceName) {
+            public void onConnectionFailed(Exception e) {
+                e.printStackTrace();
                 // Change status of UI elements if connection was unsuccessful
                 Toast.makeText(MainActivity.this, "Connection was unsuccessful", Toast.LENGTH_LONG).show();
                 listView.setVisibility(ListView.GONE);
@@ -241,26 +267,30 @@ public class MainActivity extends Activity {
             public void onClick(View v) {
 
                 if (!transferManager.isBluetoothEnable()) {
-                    transferManager.enableBluetooth(0, new ListenerAdapter() {
-                        @Override
-                        public void onEnableBluetooth(boolean success) {
-                            if (success) {
-                                Log.d(TAG, "Bluetooth is enabled");
-                                btnEnable.setText(R.string.disable);
-                            } else {
-                                Log.d(TAG, "Unable to enable Bluetooth");
+                    try {
+                        transferManager.enableBluetooth(0, new ListenerAdapter() {
+                            @Override
+                            public void onEnableBluetooth(boolean success) {
+                                if (success) {
+                                    Log.d(TAG, "Bluetooth is enabled");
+                                    btnEnable.setText(R.string.disable);
+                                } else {
+                                    Log.d(TAG, "Unable to enable Bluetooth");
+                                }
                             }
-                        }
 
-                        @Override
-                        public void onEnableWifi(boolean success) {
-                            if (success) {
-                                Log.d(TAG, "WiFi is enabled");
-                            } else {
-                                Log.d(TAG, "Unable to enable WiFi");
+                            @Override
+                            public void onEnableWifi(boolean success) {
+                                if (success) {
+                                    Log.d(TAG, "WiFi is enabled");
+                                } else {
+                                    Log.d(TAG, "Unable to enable WiFi");
+                                }
                             }
-                        }
-                    });
+                        });
+                    } catch (BluetoothBadDuration bluetoothBadDuration) {
+                        bluetoothBadDuration.printStackTrace();
+                    }
 
                 } else {
                     try {
@@ -309,10 +339,7 @@ public class MainActivity extends Activity {
     protected void onDestroy() {
         try {
             transferManager.stopListening();
-            transferManager.resetWifiName();
         } catch (IOException e) {
-            e.printStackTrace();
-        } catch (DeviceException e) {
             e.printStackTrace();
         }
         super.onDestroy();

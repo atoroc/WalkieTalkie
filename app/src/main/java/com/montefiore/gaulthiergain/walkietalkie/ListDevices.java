@@ -8,11 +8,11 @@ class ListDevices extends AdHocDevice {
     }
 
     ListDevices(AdHocDevice adHocDevice) {
-        super(adHocDevice.getDeviceAddress(), adHocDevice.getDeviceName(), adHocDevice.getType());
+        super(adHocDevice.getMacAddress(), adHocDevice.getDeviceName(), adHocDevice.getType());
     }
 
     @Override
     public String toString() {
-        return deviceAddress + " - " + deviceName;
+        return macAddress + " - " + deviceName;
     }
 }

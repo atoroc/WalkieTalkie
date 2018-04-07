@@ -9,6 +9,7 @@ import android.media.MediaRecorder;
 import android.util.Log;
 
 import com.montefiore.gaulthiergain.adhoclibrary.appframework.TransferManager;
+import com.montefiore.gaulthiergain.adhoclibrary.datalink.service.AdHocDevice;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -32,7 +33,7 @@ public class AudioClients extends Activity {
     private byte buffer[] = null;
     private byte[] data;
     private boolean isRecording = false;
-    private ArrayList<String> arrayRemoteDevices;
+    private ArrayList<AdHocDevice> arrayRemoteDevices;
 
     public AudioClients() {
         minSize = 0;
@@ -74,8 +75,8 @@ public class AudioClients extends Activity {
             try {
                 recorder.read(buffer, 0, bufferSize);
                 //outStream.write(buffer);
-                for (String remoteAddrDevice : arrayRemoteDevices) {
-                    transferManager.sendMessageTo(buffer, remoteAddrDevice);
+                for (AdHocDevice remoteDevice : arrayRemoteDevices) {
+                    transferManager.sendMessageTo(buffer, remoteDevice);
                 }
             } catch (IOException e) {
                 Log.d(TAG, "Error when sending recording");
@@ -127,18 +128,21 @@ public class AudioClients extends Activity {
     // Receive audio and write into audio track object for playback
     public void receiveRecording() {
 
-        byte[] playBuffer = new byte[minSize];
+        if (track != null) {
 
-        track.play();
+            byte[] playBuffer;
 
-        int i = 0;
-        while (!isRecording && isEnable) {
-            if (data == null || data.length == 0) {
-                //Do nothing
-            } else {
-                playBuffer = data;
-                track.write(playBuffer, 0, playBuffer.length);
-                data = null;
+            track.play();
+
+            int i = 0;
+            while (!isRecording && isEnable) {
+                if (data == null || data.length == 0) {
+                    //Do nothing
+                } else {
+                    playBuffer = data;
+                    track.write(playBuffer, 0, playBuffer.length);
+                    data = null;
+                }
             }
         }
 
@@ -162,8 +166,8 @@ public class AudioClients extends Activity {
         isEnable = false;
     }
 
-    public void addRemoteAddr(String remoteAddrDevice) {
-        this.arrayRemoteDevices.add(remoteAddrDevice);
+    public void addRemoteAddr(AdHocDevice remoteDevice) {
+        this.arrayRemoteDevices.add(remoteDevice);
     }
 
     public void setData(byte[] data) {
@@ -212,9 +216,9 @@ public class AudioClients extends Activity {
         nbClients++;
     }
 
-    public void disconnect(String remoteAddrDevice) {
-        if (arrayRemoteDevices.contains(remoteAddrDevice)) {
-            arrayRemoteDevices.remove(remoteAddrDevice);
+    public void disconnect(AdHocDevice remoteDevice) {
+        if (arrayRemoteDevices.contains(remoteDevice)) {
+            arrayRemoteDevices.remove(remoteDevice);
         }
     }
 }
