@@ -1,6 +1,5 @@
 package com.montefiore.gaulthiergain.walkietalkie;
 
-import android.app.Activity;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioRecord;
@@ -13,7 +12,6 @@ import com.montefiore.gaulthiergain.adhoclibrary.datalink.service.AdHocDevice;
 
 import java.io.IOException;
 import java.util.ArrayList;
-
 
 public class AudioClients {
 
