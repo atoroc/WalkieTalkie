@@ -15,7 +15,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 
-public class AudioClients extends Activity {
+public class AudioClients {
 
     public static final int RATE_IN_HZ = 44100;
     private boolean isEnable;

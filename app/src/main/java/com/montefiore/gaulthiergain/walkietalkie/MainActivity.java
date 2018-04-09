@@ -7,7 +7,10 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -31,7 +34,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
 
     // Requesting permission to RECORD_AUDIO
     private static final int REQUEST_RECORD_AUDIO_PERMISSION = 200;
@@ -41,8 +44,6 @@ public class MainActivity extends Activity {
     // Define UI elements
     private Button btnAudio;
     private Button btnConnect;
-    private Button btnEnable;
-    private Button btnDisconnect;
     private ListView listView;
 
     private ArrayList<ListDevices> deviceList;
@@ -52,6 +53,42 @@ public class MainActivity extends Activity {
     private TransferManager transferManager;
 
     private String[] permissions = {Manifest.permission.RECORD_AUDIO};
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu, menu);
+
+        return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+
+
+        MenuItem menuItem = menu.findItem(R.id.action_state);
+        if (transferManager != null) {
+            if (transferManager.isBluetoothEnable()) {
+                menuItem.setTitle(R.string.disable);
+            } else {
+                menuItem.setTitle(R.string.enable);
+            }
+        } else {
+            menuItem.setTitle(R.string.disable);
+        }
+
+        menuItem = menu.findItem(R.id.action_disconnect);
+        if (audioClients != null) {
+            if (audioClients.getNbClients() == 0) {
+                menuItem.setEnabled(false);
+            } else {
+                menuItem.setEnabled(true);
+            }
+        } else {
+            menuItem.setEnabled(false);
+        }
+
+        return super.onPrepareOptionsMenu(menu);
+    }
 
     // Initialization of layout
     @SuppressLint("ClickableViewAccessibility")
@@ -107,7 +144,6 @@ public class MainActivity extends Activity {
 
                     // Handle UI element change
                     btnAudio.setVisibility(View.GONE);
-                    btnDisconnect.setEnabled(false);
                     btnConnect.setEnabled(true);
                 }
             }
@@ -138,7 +174,6 @@ public class MainActivity extends Activity {
                     audioClients.startPlaying();
                     btnAudio.setVisibility(View.VISIBLE);
                     listView.setVisibility(ListView.GONE);
-                    btnDisconnect.setEnabled(true);
                     btnConnect.setEnabled(false);
                 }
 
@@ -156,28 +191,22 @@ public class MainActivity extends Activity {
         });
 
         try {
-            transferManager.getConfig().setNbThreadBt(3);
             transferManager.getConfig().setJson(false);
             transferManager.getConfig().setReliableTransportWifi(false);
             transferManager.start();
             Log.d(TAG, transferManager.getConfig().toString());
         } catch (IOException e) {
             e.printStackTrace();
-        } catch (MaxThreadReachedException e) {
-            e.printStackTrace();
         }
 
         listView = findViewById(R.id.listViewItems);
         btnConnect = findViewById(R.id.connect);
-        btnEnable = findViewById(R.id.enable);
-        btnDisconnect = findViewById(R.id.disconnect);
         btnAudio = findViewById(R.id.audioBtn);
 
         audioClients = new AudioClients(transferManager);
 
         // Disable microphone button
         btnAudio.setVisibility(View.GONE);
-        btnDisconnect.setEnabled(false);
 
         // Microphone button pressed/released
         btnAudio.setOnTouchListener(new View.OnTouchListener() {
@@ -232,76 +261,13 @@ public class MainActivity extends Activity {
             }
         });
 
-        // Disconnect
-        btnDisconnect.setOnClickListener(new OnClickListener() {
-
-            @Override
-            public void onClick(View arg0) {
-
-                Log.d(TAG, "Disconnect");
-
-                // Enable buttons and disable listView
-                btnConnect.setEnabled(true);
-                listView.setVisibility(ListView.GONE);
-
-                try {
-                    transferManager.disconnectAll();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-                // Handle UI element change
-                btnAudio.setVisibility(View.GONE);
-                btnConnect.setEnabled(true);
+        if (transferManager.isWifiEnable()) {
+            try {
+                transferManager.disableWifi();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        });
-
-        if (transferManager.isBluetoothEnable()) {
-            btnEnable.setText(R.string.disable);
-        } else {
-            btnEnable.setText(R.string.enable);
         }
-
-        btnEnable.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                if (!transferManager.isBluetoothEnable()) {
-                    try {
-                        transferManager.enableBluetooth(0, new ListenerAdapter() {
-                            @Override
-                            public void onEnableBluetooth(boolean success) {
-                                if (success) {
-                                    Log.d(TAG, "Bluetooth is enabled");
-                                    btnEnable.setText(R.string.disable);
-                                } else {
-                                    Log.d(TAG, "Unable to enable Bluetooth");
-                                }
-                            }
-
-                            @Override
-                            public void onEnableWifi(boolean success) {
-                                if (success) {
-                                    Log.d(TAG, "WiFi is enabled");
-                                } else {
-                                    Log.d(TAG, "Unable to enable WiFi");
-                                }
-                            }
-                        });
-                    } catch (BluetoothBadDuration bluetoothBadDuration) {
-                        bluetoothBadDuration.printStackTrace();
-                    }
-
-                } else {
-                    try {
-                        transferManager.disableBluetooth();
-                        btnEnable.setText(R.string.disable);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        });
 
         // Attempt to btnConnect when paired device is clicked in ListView
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -324,6 +290,70 @@ public class MainActivity extends Activity {
     }
 
     @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_state:
+                updateBluetoothState(item);
+                return true;
+            case R.id.action_disconnect:
+                Log.d(TAG, "Disconnect");
+
+                // Enable buttons and disable listView
+                btnConnect.setEnabled(true);
+                listView.setVisibility(ListView.GONE);
+
+                try {
+                    transferManager.disconnectAll();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                // Handle UI element change
+                btnAudio.setVisibility(View.GONE);
+                btnConnect.setEnabled(true);
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void updateBluetoothState(final MenuItem item) {
+        if (!transferManager.isBluetoothEnable()) {
+            try {
+                transferManager.enableBluetooth(0, new ListenerAdapter() {
+                    @Override
+                    public void onEnableBluetooth(boolean success) {
+                        if (success) {
+                            Log.d(TAG, "Bluetooth is enabled");
+                            item.setTitle(R.string.disable);
+                        } else {
+                            Log.d(TAG, "Unable to enable Bluetooth");
+                        }
+                    }
+
+                    @Override
+                    public void onEnableWifi(boolean success) {
+                        if (success) {
+                            Log.d(TAG, "WiFi is enabled");
+                        } else {
+                            Log.d(TAG, "Unable to enable WiFi");
+                        }
+                    }
+                });
+            } catch (BluetoothBadDuration e) {
+                e.printStackTrace();
+            }
+
+        } else {
+            try {
+                transferManager.disableBluetooth();
+                item.setTitle(R.string.enable);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         switch (requestCode) {
@@ -336,12 +366,12 @@ public class MainActivity extends Activity {
     }
 
     @Override
-    protected void onDestroy() {
+    protected void onStop() {
         try {
             transferManager.stopListening();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        super.onDestroy();
+        super.onStop();
     }
 }

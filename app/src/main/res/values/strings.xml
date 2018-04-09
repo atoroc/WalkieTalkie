@@ -1,8 +1,7 @@
 <resources>
     <string name="app_name">WalkieTalkie</string>
     <string name="disconnect">Disconnect</string>
-    <string name="listen">Listen</string>
-    <string name="connect">connect</string>
-    <string name="enable">enable</string>
-    <string name="disable">disable</string>
+    <string name="connect">Connect</string>
+    <string name="enable">Enable Bt</string>
+    <string name="disable">Disable Bt</string>
 </resources>
