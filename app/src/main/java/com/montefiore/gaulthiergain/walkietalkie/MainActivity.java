@@ -97,26 +97,7 @@ public class MainActivity extends AppCompatActivity {
 
         ActivityCompat.requestPermissions(this, permissions, REQUEST_RECORD_AUDIO_PERMISSION);
 
-        transferManager = new TransferManager(true, getApplicationContext(), new ListenerApp() {
-            @Override
-            public void onDeviceDiscovered(AdHocDevice device) {
-
-            }
-
-            @Override
-            public void onDiscoveryStarted() {
-
-            }
-
-            @Override
-            public void onDiscoveryFailed(Exception exception) {
-                exception.printStackTrace();
-            }
-
-            @Override
-            public void onDiscoveryCompleted(HashMap<String, AdHocDevice> mapAddressDevice) {
-
-            }
+        transferManager = new TransferManager(true, new ListenerApp() {
 
             @Override
             public void onReceivedData(AdHocDevice adHocDevice, Object pdu) {
@@ -191,7 +172,7 @@ public class MainActivity extends AppCompatActivity {
         try {
             transferManager.getConfig().setJson(false);
             transferManager.getConfig().setReliableTransportWifi(false);
-            transferManager.start();
+            transferManager.start(getApplicationContext());
             Log.d(TAG, transferManager.getConfig().toString());
         } catch (IOException e) {
             e.printStackTrace();
@@ -317,7 +298,7 @@ public class MainActivity extends AppCompatActivity {
     private void updateBluetoothState(final MenuItem item) {
         if (!transferManager.isBluetoothEnable()) {
             try {
-                transferManager.enableBluetooth(0, new ListenerAdapter() {
+                transferManager.enableBluetooth(0, getApplicationContext(), new ListenerAdapter() {
                     @Override
                     public void onEnableBluetooth(boolean success) {
                         if (success) {
