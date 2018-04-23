@@ -178,6 +178,24 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
+        if (!transferManager.isBluetoothEnable()) {
+            try {
+                transferManager.enableBluetooth(0, getApplicationContext(), new ListenerAdapter() {
+                    @Override
+                    public void onEnableBluetooth(boolean success) {
+                        Log.d(TAG, "Bluetooth is enabled");
+                    }
+
+                    @Override
+                    public void onEnableWifi(boolean success) {
+                        // Ignored
+                    }
+                });
+            } catch (BluetoothBadDuration bluetoothBadDuration) {
+                bluetoothBadDuration.printStackTrace();
+            }
+        }
+
         listView = findViewById(R.id.listViewItems);
         btnConnect = findViewById(R.id.connect);
         btnAudio = findViewById(R.id.audioBtn);
@@ -254,7 +272,7 @@ public class MainActivity extends AppCompatActivity {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
                 try {
-                    transferManager.connect(deviceList.get(position));
+                    transferManager.connect(3, deviceList.get(position));
                 } catch (DeviceException e) {
                     e.printStackTrace();
                 } catch (DeviceAlreadyConnectedException e) {
