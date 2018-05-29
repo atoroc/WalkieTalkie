@@ -8,6 +8,7 @@ import android.media.MediaRecorder;
 import android.util.Log;
 
 import com.montefiore.gaulthiergain.adhoclibrary.appframework.TransferManager;
+import com.montefiore.gaulthiergain.adhoclibrary.datalink.exceptions.DeviceException;
 import com.montefiore.gaulthiergain.adhoclibrary.datalink.service.AdHocDevice;
 
 import java.io.IOException;
@@ -77,7 +78,9 @@ public class AudioClients {
                     transferManager.sendMessageTo(buffer, remoteDevice);
                 }
             } catch (IOException e) {
-                Log.d(TAG, "Error when sending recording");
+                Log.e(TAG, "Error when sending recording");
+            } catch (DeviceException e) {
+                Log.e(TAG, "Error when sending recording");
             }
         }
 

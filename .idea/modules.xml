@@ -3,7 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/WalkieTalkie.iml" filepath="$PROJECT_DIR$/WalkieTalkie.iml" />
-      <module fileurl="file://$USER_HOME$/Desktop/AdHocLib/adhoclibrary/adhoclibrary.iml" filepath="$USER_HOME$/Desktop/AdHocLib/adhoclibrary/adhoclibrary.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>

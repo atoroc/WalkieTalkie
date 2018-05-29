@@ -25,7 +25,6 @@ import com.montefiore.gaulthiergain.adhoclibrary.appframework.TransferManager;
 import com.montefiore.gaulthiergain.adhoclibrary.datalink.exceptions.BluetoothBadDuration;
 import com.montefiore.gaulthiergain.adhoclibrary.datalink.exceptions.DeviceException;
 import com.montefiore.gaulthiergain.adhoclibrary.datalink.service.AdHocDevice;
-import com.montefiore.gaulthiergain.adhoclibrary.network.exceptions.DeviceAlreadyConnectedException;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -65,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
 
         MenuItem menuItem = menu.findItem(R.id.action_state);
         if (transferManager != null) {
-            if (transferManager.isBluetoothEnable()) {
+            if (transferManager.isBluetoothEnabled()) {
                 menuItem.setTitle(R.string.disable);
             } else {
                 menuItem.setTitle(R.string.enable);
@@ -103,6 +102,11 @@ public class MainActivity extends AppCompatActivity {
             public void onReceivedData(AdHocDevice adHocDevice, Object pdu) {
                 Log.d(TAG, "Receive from " + adHocDevice.toString());
                 audioClients.setData((byte[]) pdu);
+            }
+
+            @Override
+            public void onForwardData(AdHocDevice adHocDevice, Object pdu) {
+                // Ignored
             }
 
             @Override
@@ -178,7 +182,7 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        if (!transferManager.isBluetoothEnable()) {
+        if (!transferManager.isBluetoothEnabled()) {
             try {
                 transferManager.enableBluetooth(0, getApplicationContext(), new ListenerAdapter() {
                     @Override
@@ -235,7 +239,7 @@ public class MainActivity extends AppCompatActivity {
 
                 // List to store all paired device information
                 deviceList = new ArrayList<>();
-                HashMap<String, AdHocDevice> pairedDevices = transferManager.getPairedDevices();
+                HashMap<String, AdHocDevice> pairedDevices = transferManager.getPairedBluetoothDevices();
 
                 // Populate list with the paired device information
                 if (pairedDevices.size() > 0) {
@@ -258,7 +262,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        if (transferManager.isWifiEnable()) {
+        if (transferManager.isWifiEnabled()) {
             try {
                 transferManager.disableWifi();
             } catch (IOException e) {
@@ -274,8 +278,6 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     transferManager.connect(3, deviceList.get(position));
                 } catch (DeviceException e) {
-                    e.printStackTrace();
-                } catch (DeviceAlreadyConnectedException e) {
                     e.printStackTrace();
                 }
 
@@ -314,7 +316,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateBluetoothState(final MenuItem item) {
-        if (!transferManager.isBluetoothEnable()) {
+        if (!transferManager.isBluetoothEnabled()) {
             try {
                 transferManager.enableBluetooth(0, getApplicationContext(), new ListenerAdapter() {
                     @Override
