@@ -26,6 +26,9 @@ repositories {
 }
 
 dependencies {
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.8.8'
+    implementation 'com.fasterxml.jackson.core:jackson-core:2.8.8'
+    implementation 'com.fasterxml.jackson.core:jackson-annotations:2.8.8'
     implementation 'com.montefiore.gaulthiergain.adhoclib:adhoclibrary:1.0.1'
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'com.android.support:appcompat-v7:26.1.0'
