@@ -1,11 +1,13 @@
-# Android-Walkie-Talkie
+# DistributedCache
 
-A bluetooth based push to talk app for Android.
+This Walkie-Talkie application is a proof a concept application for the _adhoclib_ [library](https://github.com/gaulthiergain/AdHocLib). 
 
-## Introduction
+A Walkie-Talkie is a two way radio that allows communication between two or more parties. There are several accessories and devices that can become Walkie talkie. This application allows Android devices to function as walkie-talkies over a bluetooth  and Wi-FI Direct connections. Communication will take place between the devices similar to a push-to-talk application. This means that when one device is sending audio data, the other device is receiving and inversely.
+  
+### Installation and documentation
 
-A Walkie-talkie is a two way radio that allows communication between two or more parties. There are several accessories and devices that can become Walkie talkie. This project focuses on how to make two mobile android devices function as walkie-talkies over a bluetooth connection. Communication will take place between the devices similar to a push-to-talk application. This means that when one device is sending audio data, the other device is receiving (not transmitting) and vice-versa. 
+For library installation and documentation, a wiki is available on this [address](https://github.com/gaulthiergain/AdHocLib/wiki).
 
-## Screenshot 
 
-![scre](https://cloud.githubusercontent.com/assets/21252571/25646336/6684e8b6-2f85-11e7-8aa6-be6c4adc4481.png)
+
+
